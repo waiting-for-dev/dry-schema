@@ -7,6 +7,7 @@ require 'dry/schema/config'
 require 'dry/schema/result'
 require 'dry/schema/messages'
 require 'dry/schema/message_compiler'
+require 'dry/schema/ast_error_compiler'
 
 module Dry
   module Schema
@@ -23,7 +24,13 @@ module Dry
       option :config, default: proc { Config.new }
 
       # @api private
-      option :message_compiler, default: proc { MessageCompiler.new(Messages.setup(config)) }
+      option :message_compiler, default: (proc do
+        if config.errors == :messages
+          MessageCompiler.new(Messages.setup(config))
+        elsif config.errors == :ast
+          AstErrorCompiler.new
+        end
+      end)
 
       # @api private
       def call(input)

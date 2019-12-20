@@ -19,6 +19,7 @@ module Dry
       setting :messages, :yaml
       setting :messages_file
       setting :namespace
+      setting :errors, :messages
       setting :rules, {}
 
       # Build a new config object with defaults filled in

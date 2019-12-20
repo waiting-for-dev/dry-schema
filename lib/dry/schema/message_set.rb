@@ -1,52 +1,25 @@
 # frozen_string_literal: true
 
+require 'dry/schema/error_set'
+
 module Dry
   module Schema
-    # A set of messages used to generate errors
+    # A set of error messages used to generate human-readable errors
     #
     # @see Result#message_set
     #
     # @api public
-    class MessageSet
+    class MessageSet < ErrorSet
       include Enumerable
 
-      attr_reader :messages, :placeholders, :options
-
-      # @api private
-      def self.[](messages, options = EMPTY_HASH)
-        new(messages.flatten, options)
-      end
-
-      # @api private
-      def initialize(messages, options = EMPTY_HASH)
-        @messages = messages
-        @options = options
-        initialize_placeholders!
-      end
-
-      # @api public
-      def each(&block)
-        return to_enum unless block
-        messages.each(&block)
-      end
-
-      # @api public
-      def to_h
-        messages_map
-      end
-      alias_method :to_hash, :to_h
-      alias_method :dump, :to_h
-
-      # @api private
-      def empty?
-        messages.empty?
-      end
+      attr_reader :errors, :placeholders, :options
 
       private
 
       # @api private
-      def messages_map(messages = self.messages)
-        messages.group_by(&:path).reduce(placeholders) do |hash, (path, msgs)|
+      def errors_map(errors = self.errors)
+        initialize_placeholders!
+        errors.group_by(&:path).reduce(placeholders) do |hash, (path, msgs)|
           node = path.reduce(hash) { |a, e| a[e] }
 
           msgs.each do |msg|
@@ -61,12 +34,12 @@ module Dry
 
       # @api private
       def paths
-        @paths ||= messages.map(&:path).uniq
+        @paths ||= errors.map(&:path).uniq
       end
 
       # @api private
       def initialize_placeholders!
-        @placeholders = messages.map(&:path).uniq.reduce({}) do |hash, path|
+        @placeholders ||= errors.map(&:path).uniq.reduce({}) do |hash, path|
           curr_idx = 0
           last_idx = path.size - 1
           node = hash
